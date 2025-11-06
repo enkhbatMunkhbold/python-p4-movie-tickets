@@ -97,22 +97,29 @@ class TicketById(Resource):
         return {}, 204
      
      def patch(self, ticket_id):
-        data = request.get_json()
-        ticket = Ticket.query.filter_by(id=ticket_id).first()
+        try:
+            data = request.get_json()
+            ticket = Ticket.query.filter_by(id=ticket_id).first()
 
-        if not ticket:
-            return {'error': 'Ticket not found'}, 404
+            if not ticket:
+                return {'error': 'Ticket not found'}, 404
 
-        allowed_attributes = ['ticket_number', 'time']
-        for attr in allowed_attributes:
-            if hasattr(ticket, attr):
-                setattr(ticket, attr, data[attr])  
+            allowed_attributes = ['ticket_number', 'time']
+            for attr in allowed_attributes:
+                if attr in data and hasattr(ticket, attr):
+                    setattr(ticket, attr, data[attr])  
 
-        ticket.total_price = ticket.movie.price * ticket.ticket_number
-        
-        db.session.add(ticket)
-        db.session.commit()
-        return make_response(jsonify(ticket.to_dict()), 200)
+            ticket.total_price = ticket.movie.price * ticket.ticket_number
+            
+            db.session.add(ticket)
+            db.session.commit()
+            return make_response(jsonify(ticket.to_dict()), 200)
+        except KeyError as e:
+            db.session.rollback()
+            return {'error': f'Missing required field: {str(e)}'}, 400
+        except Exception as e:
+            db.session.rollback()
+            return {'error': str(e)}, 400
      
 api.add_resource(TicketById, '/tickets/<int:ticket_id>')
 

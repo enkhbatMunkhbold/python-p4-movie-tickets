@@ -1,8 +1,8 @@
-import React from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Ticket from './Ticket'
 
 const Tickets = ({ user, setUser }) => {
+  const navigate = useNavigate()
   const location = useLocation();
   const { movie } = location.state || {};
 
@@ -11,6 +11,7 @@ const Tickets = ({ user, setUser }) => {
       ...prevUser,
       tickets: prevUser.tickets.filter(ticket => ticket.id !== ticketId),
     }));
+    navigate('/profile')
   }
 
   function handleEditSave(editedTicket) {
@@ -24,9 +25,10 @@ const Tickets = ({ user, setUser }) => {
   }
 
   function renderTickets() {
-    const userTickets = movie.tickets.filter(ticket => ticket.user_id === user.id);
+    // Filter tickets from user.tickets (which updates when edited) instead of movie.tickets (static from location.state)
+    const userTickets = user.tickets.filter(ticket => ticket.movie && ticket.movie.id === movie.id);
     return userTickets.map(ticket => (
-      <Ticket key={ticket.id} ticket={ticket} onEditSave={handleEditSave} onDeleteTicket={handleDeleteTicket}/>
+      <Ticket key={ticket.id} ticket={ticket} onEditTicket={handleEditSave} onDeleteTicket={handleDeleteTicket}/>
     ));
   }
 
@@ -34,7 +36,7 @@ const Tickets = ({ user, setUser }) => {
     <div>
       <>
         <h3>Your Tickets for {movie.title}:</h3>
-        {movie.tickets && movie.tickets.length > 0 ? (
+        {user.tickets && user.tickets.filter(ticket => ticket.movie && ticket.movie.id === movie.id).length > 0 ? (
           <ul>
             {renderTickets()}
           </ul>

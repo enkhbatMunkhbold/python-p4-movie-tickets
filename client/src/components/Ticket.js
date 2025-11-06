@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Formik, Form, Field } from 'formik' 
 import * as Yup from 'yup'
 import '../styling/ticket.css'
@@ -36,10 +36,8 @@ const Ticket = ({ ticket, onEditTicket, onDeleteTicket }) => {
   const handleSubmitEdit = async (values, {setSubmitting, setErrors}) => {
     try {
       const updatedTicket = {
-        ...ticket,
         ticket_number: parseInt(values.ticketNumber),
         time: values.showTime,
-        total_price: ticket.movie.price * parseInt(values.ticketNumber),
       };
       const response = await fetch(`/tickets/${ticket.id}`, {
         method: 'PATCH',
@@ -57,10 +55,17 @@ const Ticket = ({ ticket, onEditTicket, onDeleteTicket }) => {
         onEditTicket(updatedTicketData);
         setIsEditing(false);
       } else {
-        const errorData = await response.json();
-        setErrors({ submit: errorData.error || "Failed to update ticket" });
-       }
+        let errorMessage = "Failed to update ticket";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        setErrors({ submit: errorMessage });
+      }
     } catch (error) {
+      console.error('Error updating ticket:', error);
       setErrors({ submit: "An error occurred while processing your request" });
     } finally {
       setSubmitting(false);
