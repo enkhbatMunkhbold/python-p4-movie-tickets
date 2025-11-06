@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 ipdb = "0.13.9"
-flask = "*"
 flask-sqlalchemy = "3.0.3"
 Werkzeug = "2.2.2"
 flask-migrate = "*"
@@ -16,3 +15,5 @@ faker = "*"
 
 [requires]
 python_full_version = "3.8.13"
+
+[dev-packages]
